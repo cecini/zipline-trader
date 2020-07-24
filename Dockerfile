@@ -21,7 +21,7 @@
 #
 #    docker exec -it zipline zipline run -f /projects/my_algo.py --start 2015-1-1 --end 2016-1-1 -o /projects/result.pickle
 #
-FROM python:3.6.6
+FROM python:3.6.10
 
 #
 # set up environment
@@ -54,9 +54,11 @@ RUN mkdir ${PROJECT_DIR} \
 
 WORKDIR /ta-lib
 
-RUN pip install 'numpy>=1.11.1,<2.0.0' \
-  && pip install 'scipy>=0.17.1,<1.0.0' \
-  && pip install 'pandas>=0.18.1,<1.0.0' \
+RUN pip install 'numpy>=1.14.1,<2.0.0' \
+  && pip install 'scipy>=1.0.0,<1.5.1' \
+  && pip install 'pandas>=0.22.0,<1.0.0' \
+  && pip install 'pandas_datareader>=0.4.0,<0.9.0' \
+  && pip install 'dask>=0.17.1,<2.21.0' \
   && ./configure --prefix=/usr \
   && make \
   && make install \
