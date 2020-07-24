@@ -54,11 +54,12 @@ RUN mkdir ${PROJECT_DIR} \
 
 WORKDIR /ta-lib
 
-RUN pip install 'numpy>=1.14.1,<2.0.0' \
-  && pip install 'scipy>=1.0.0,<1.5.1' \
-  && pip install 'pandas>=0.22.0,<1.0.0' \
-  && pip install 'pandas_datareader>=0.4.0,<0.9.0' \
-  && pip install 'dask>=0.17.1,<2.21.0' \
+RUN pip install 'numpy==1.14.1' \
+  && pip install 'scipy==1.0.0' \
+  && pip install 'pandas==0.22.0' \
+  && pip install 'pandas_datareader==0.4.0' \
+  && pip install 'dask==0.17.1' \
+  && pip install 'statsmodels==0.9.0' \
   && ./configure --prefix=/usr \
   && make \
   && make install \
