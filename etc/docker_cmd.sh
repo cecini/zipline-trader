@@ -15,5 +15,5 @@ if [ ! -f /var/tmp/zipline_init ] ; then
 fi
 
 jupyter notebook --allow-root -y --no-browser --notebook-dir=${PROJECT_DIR} \
-    --certfile=${SSL_CERT_PEM} --keyfile=${SSL_CERT_KEY} --ip='*' \
+    --ip='*' \
     --config=${CONFIG_PATH}

@@ -33,8 +33,6 @@ ENTRYPOINT ["/tini", "--"]
 
 ENV PROJECT_DIR=/projects \
     NOTEBOOK_PORT=8888 \
-    SSL_CERT_PEM=/root/.jupyter/jupyter.pem \
-    SSL_CERT_KEY=/root/.jupyter/jupyter.key \
     PW_HASH="u'sha1:31cb67870a35:1a2321318481f00b0efdf3d1f71af523d3ffc505'" \
     CONFIG_PATH=/root/.jupyter/jupyter_notebook_config.py
 
