@@ -162,6 +162,8 @@ class DataPortal(object):
         self._splits_dict = {}
         self._mergers_dict = {}
         self._dividends_dict = {}
+        self._shares_dict = {}
+
 
         # Handle extra sources, like Fetcher.
         self._augmented_sources_map = {}
@@ -636,6 +638,44 @@ class DataPortal(object):
             adjustment_ratios_per_asset.append(ratio)
 
         return adjustment_ratios_per_asset
+
+    def get_shares(self, assets, end_dt, bar_count, fields):
+
+        session = self.trading_calendar.minute_to_session_label(end_dt)
+        days_for_window = self._get_days_for_window(session, bar_count)
+
+        if isinstance(assets, Asset):
+            assets = [assets]
+
+        if not fields:
+            fields = 'shares'
+
+        if self._adjustment_reader is None:
+            raise Exception("No adjusment reader")
+
+        data = {asset:self._get_hist_shares(int(asset),days_for_window,fields) for asset in assets}
+        return pd.DataFrame(
+            data,
+            index=days_for_window,
+            columns=assets
+        )
+
+    def _get_hist_shares(self,sid, dts, fields):
+        try:
+            shares = self._shares_dict[sid]
+        except KeyError:
+            shares= self._shares_dict[sid]  = np.array(self._adjustment_reader. \
+                            get_shares_for_sid(sid))
+
+        indices = np.searchsorted(pd.to_datetime(shares[:,0]),dts)
+        if fields == 'shares':
+            return shares[indices,1]
+        elif fields == 'circulation':
+            return shares[indices,2]
+        else:
+            raise Exception("wrong filed")
+
+
 
     def get_adjusted_value(self, asset, field, dt,
                            perspective_dt,

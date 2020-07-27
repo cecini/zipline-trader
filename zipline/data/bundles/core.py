@@ -13,6 +13,16 @@ from toolz import curry, complement, take
 
 from ..adjustments import SQLiteAdjustmentReader, SQLiteAdjustmentWriter
 from ..bcolz_daily_bars import BcolzDailyBarReader, BcolzDailyBarWriter
+
+from ..fundamental import FundamentalReader, FundamentalWriter
+try:
+    from ..rocksdb_bars import RocksdbMinuteBarWriter, RocksdbMinuteBarReader
+except Exception as ex:
+    from ..minute_bars import BcolzMinuteBarReader as RocksdbMinuteBarReader
+    from ..minute_bars import BcolzMinuteBarWriter as RocksdbMinuteBarWriter
+
+
+
 from ..minute_bars import (
     BcolzMinuteBarReader,
     BcolzMinuteBarWriter,
@@ -52,6 +62,13 @@ def daily_equity_path(bundle_name, timestr, environ=None):
         environ=environ,
     )
 
+def fundamental_db_path(bundle_name, timestr, environ=None):
+    return pth.data_path(
+        fundamental_db_releative(bundle_name, timestr, environ),
+        environ=environ,
+    )
+
+    
 
 def adjustment_db_path(bundle_name, timestr, environ=None):
     return pth.data_path(
@@ -87,6 +104,11 @@ def asset_db_relative(bundle_name, timestr, db_version=None):
     db_version = ASSET_DB_VERSION if db_version is None else db_version
 
     return bundle_name, timestr, 'assets-%d.sqlite' % db_version
+
+
+def fundamental_db_releative(bundle_name, timestr, environ=None):
+    return bundle_name, timestr, 'fundamental.sqlite'
+
 
 
 def to_bundle_ingest_dirname(ts):
@@ -144,7 +166,7 @@ RegisteredBundle = namedtuple(
 BundleData = namedtuple(
     'BundleData',
     'asset_finder equity_minute_bar_reader equity_daily_bar_reader '
-    'adjustment_reader',
+    'adjustment_reader fundamental_reader', 
 )
 
 BundleCore = namedtuple(
@@ -338,7 +360,8 @@ def _make_bundle_core():
                environ=os.environ,
                timestamp=None,
                assets_versions=(),
-               show_progress=False):
+               show_progress=False,
+               writer="bcolz"):
         """Ingest data for a given bundle.
 
         Parameters
@@ -354,6 +377,9 @@ def _make_bundle_core():
             Versions of the assets db to which to downgrade.
         show_progress : bool, optional
             Tell the ingest function to display the progress where possible.
+        incremental : bool, optional
+            Tell the ingest function to incremental ingest            
+
         """
         try:
             bundle = bundles[name]
@@ -371,9 +397,19 @@ def _make_bundle_core():
         if end_session is None or end_session > calendar.last_session:
             end_session = calendar.last_session
 
-        if timestamp is None:
-            timestamp = pd.Timestamp.utcnow()
-        timestamp = timestamp.tz_convert('utc').tz_localize(None)
+        try:
+            candidates = os.listdir(
+                pth.data_path([name], environ=environ),
+            )
+            timestr = max(
+                filter(complement(pth.hidden), candidates),
+                key=from_bundle_ingest_dirname,
+            )
+        except Exception:
+            if timestamp is None:
+                timestamp = pd.Timestamp.utcnow()
+            timestamp = timestamp.tz_convert('utc').tz_localize(None)
+
 
         timestr = to_bundle_ingest_dirname(timestamp)
         cachepath = cache_path(name, environ=environ)
@@ -387,9 +423,10 @@ def _make_bundle_core():
                 wd = stack.enter_context(working_dir(
                     pth.data_path([], environ=environ))
                 )
-                daily_bars_path = wd.ensure_dir(
-                    *daily_equity_relative(name, timestr)
-                )
+                daily_bars_path = daily_equity_path(name, timestr, environ=environ)
+                pth.ensure_directory(
+                    daily_bars_path
+                )                
                 daily_bar_writer = BcolzDailyBarWriter(
                     daily_bars_path,
                     calendar,
@@ -402,15 +439,41 @@ def _make_bundle_core():
                 # that it can compute the adjustment ratios for the dividends.
 
                 daily_bar_writer.write(())
-                minute_bar_writer = BcolzMinuteBarWriter(
-                    wd.ensure_dir(*minute_equity_relative(name, timestr)),
-                    calendar,
-                    start_session,
-                    end_session,
-                    minutes_per_day=bundle.minutes_per_day,
+                minute_bars_path = minute_equity_path(name, timestr, environ=environ)
+                pth.ensure_directory(
+                    minute_bars_path
                 )
-                assets_db_path = wd.getpath(*asset_db_relative(name, timestr))
-                asset_db_writer = AssetDBWriter(assets_db_path)
+                if writer == "rocksdb":
+                    minute_bar_writer = RocksdbMinuteBarWriter(
+                        minute_bars_path,
+                        calendar,
+                        start_session,
+                        end_session,
+                        minutes_per_day=bundle.minutes_per_day,
+                    )
+                else:                
+                    minute_bar_writer = BcolzMinuteBarWriter(
+                        minute_bars_path,
+                        calendar,
+                        start_session,
+                        end_session,
+                        minutes_per_day=bundle.minutes_per_day,
+                    )
+                wd.ensure_dir(
+                    name, timestr,
+                )
+                asset_db_writer = AssetDBWriter(
+                    wd.getpath(*asset_db_relative(
+                        name, timestr, environ=environ,
+                    ))
+                )
+
+                fundamental_db_writer = FundamentalWriter(
+                    wd.getpath(*fundamental_db_releative(
+                        name, timestr, environ=environ
+                    ))
+                )
+                    
 
                 adjustment_db_writer = stack.enter_context(
                     SQLiteAdjustmentWriter(
@@ -424,6 +487,7 @@ def _make_bundle_core():
                 minute_bar_writer = None
                 asset_db_writer = None
                 adjustment_db_writer = None
+                fundamental_db_writer = None
                 if assets_versions:
                     raise ValueError('Need to ingest a bundle that creates '
                                      'writers in order to downgrade the assets'
@@ -435,6 +499,7 @@ def _make_bundle_core():
                 minute_bar_writer,
                 daily_bar_writer,
                 adjustment_db_writer,
+                fundamental_db_writer,
                 calendar,
                 start_session,
                 end_session,
@@ -490,7 +555,7 @@ def _make_bundle_core():
                 ),
             )
 
-    def load(name, environ=os.environ, timestamp=None):
+    def load(name, environ=os.environ, timestamp=None, reader="bcolz"):
         """Loads a previously ingested bundle.
 
         Parameters
@@ -502,6 +567,8 @@ def _make_bundle_core():
         timestamp : datetime, optional
             The timestamp of the data to lookup.
             Defaults to the current time.
+        reader : str
+            minute reader            
 
         Returns
         -------
@@ -511,19 +578,29 @@ def _make_bundle_core():
         if timestamp is None:
             timestamp = pd.Timestamp.utcnow()
         timestr = most_recent_data(name, timestamp, environ=environ)
+        minute_reader = BcolzMinuteBarReader(
+                minute_equity_path(name, timestr, environ=environ),
+            )
+        if reader == "rocksdb":
+            minute_reader = RocksdbMinuteBarReader(
+                minute_equity_path(name, timestr, environ=environ),
+            )
+jjj        
         return BundleData(
             asset_finder=AssetFinder(
                 asset_db_path(name, timestr, environ=environ),
             ),
-            equity_minute_bar_reader=BcolzMinuteBarReader(
-                minute_equity_path(name, timestr, environ=environ),
-            ),
+            equity_minute_bar_reader=minute_reader,
+            
             equity_daily_bar_reader=BcolzDailyBarReader(
                 daily_equity_path(name, timestr, environ=environ),
             ),
             adjustment_reader=SQLiteAdjustmentReader(
                 adjustment_db_path(name, timestr, environ=environ),
             ),
+            fundamental_reader=FundamentalReader(
+                fundamental_db_path(name, timestr, environ=environ),
+            ),            
         )
 
     @preprocess(

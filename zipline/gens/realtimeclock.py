@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from time import sleep
+from datetime import time
 
 from logbook import Logger
 import pandas as pd
@@ -22,6 +23,9 @@ from zipline.gens.sim_engine import (
     MINUTE_END,
     BEFORE_TRADING_START_BAR
 )
+
+from zipline.utils.calendars.trading_calendar import days_at_time
+
 
 log = Logger('Realtime Clock')
 
@@ -64,6 +68,8 @@ class RealtimeClock(object):
         self.time_skew = time_skew
         self.is_broker_alive = is_broker_alive or (lambda: True)
         self._last_emit = None
+        self.lunch_break_start = days_at_time(sessions,time(11,30),tz='Asia/Shanghai')
+        self.lunch_break_end = days_at_time(sessions,time(13),tz='Asia/Shanghai')        
         self._before_trading_start_bar_yielded = False
         self._execution_id = execution_id
         self._stop_execution_callback = stop_execution_callback
@@ -101,6 +107,8 @@ class RealtimeClock(object):
                          self.execution_opens[index].tz_localize('UTC')):
                     # sleep anywhere between yesterday's close and today's open
                     sleep(1)
+                elif self.lunch_break_start[0] < server_time <= self.lunch_break_end[0]:
+                    sleep(1)                    
                 elif (self.execution_opens[index].tz_localize('UTC') <= server_time <
                       self.execution_closes[index].tz_localize('UTC')):
                     if (self._last_emit is None or

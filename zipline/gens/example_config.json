@@ -1,0 +1,15 @@
+  {
+      "account_id": "资金账户",
+      "trade_account": "交易账户，没有就和资金账户一样",
+      "trade_password": "交易密码",
+      "communication_password": "没有就不填",
+      "sh_shareholder_code": "上交所股东代码",
+      "sz_shareholder_code": "深交所股东代码",
+      "ip": "接下来4项参考群文件web_file",
+      "port": 80,
+      "version": "8.095",
+      "yybID": 0,
+      "dll_path": "trade.dll",
+      "broker": "券商名称首字母，例如招商证券zszq"
+  }
+  

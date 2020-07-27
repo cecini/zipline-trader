@@ -126,3 +126,8 @@ del np
 del numpy_version
 del StrictVersion
 del new_pandas
+
+#from ._version import get_versions
+#__version__ = get_versions()['version']
+#del get_versions
+

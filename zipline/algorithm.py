@@ -21,6 +21,22 @@ import pytz
 import pandas as pd
 from contextlib2 import ExitStack
 import numpy as np
+from zipline.data.schema import (
+    full,
+    fundamental,
+)
+from sqlalchemy import (
+    create_engine,
+)
+from sqlalchemy.sql import (
+    func
+)
+from sqlalchemy.orm import (
+    sessionmaker,
+    Query,
+)
+
+
 
 from itertools import chain, repeat
 
@@ -65,7 +81,8 @@ from zipline.finance.controls import (
     MaxPositionSize,
     MaxLeverage,
     MinLeverage,
-    RestrictedListOrder
+    RestrictedListOrder,
+    LimitPrice
 )
 from zipline.finance.execution import (
     LimitOrder,
@@ -135,6 +152,12 @@ from zipline.zipline_warnings import ZiplineDeprecationWarning
 
 
 log = logbook.Logger("ZiplineLog")
+
+def get_round_lot(asset):
+    # fixme 131810
+    assert isinstance(asset, Equity)
+    return 100
+
 
 # For creating and storing pipeline instances
 AttachedPipeline = namedtuple('AttachedPipeline', 'pipe chunks eager')
@@ -222,6 +245,9 @@ class TradingAlgorithm(object):
         default: 'zipline'
     adjustment_reader : AdjustmentReader
         The interface to the adjustments.
+    fundamental_reader : FundamentalReader, optional
+        fundamental reader
+       
     """
 
     def __init__(self,
@@ -253,7 +279,7 @@ class TradingAlgorithm(object):
                  stop_execution_callback=None,
                  **initialize_kwargs):
         # List of trading controls to be used to validate orders.
-        self.trading_controls = []
+        self.trading_controls = [LongOnly(on_error="log"), LimitPrice(on_error='log')]
 
         # List of account controls to be checked on each bar.
         self.account_controls = []
@@ -353,6 +379,7 @@ class TradingAlgorithm(object):
         self.event_manager = EventManager(create_event_context)
 
         self._handle_data = None
+        self.fundamental_reader = kwargs.pop("fundamental_reader",None)
 
         def noop(*args, **kwargs):
             pass
@@ -1225,7 +1252,13 @@ class TradingAlgorithm(object):
 
         value_multiplier = asset.price_multiplier
 
-        return value / (last_price * value_multiplier)
+        amount = value / (last_price * value_multiplier)
+        if isinstance(asset, Equity):
+            round_lot = get_round_lot(asset)
+            amount = int(amount / round_lot) * round_lot
+
+        return amount       
+
 
     def _can_order_asset(self, asset):
         if not isinstance(asset, Asset):
@@ -1649,6 +1682,23 @@ class TradingAlgorithm(object):
         except ValueError:
             raise UnsupportedDatetimeFormat(input=dt,
                                             method='set_symbol_lookup_date')
+    @api_method
+    def query(self,*args,**kwargs):
+        if self.fundamental_reader:
+            return self.fundamental_reader.query(self.datetime,*args,**kwargs)
+
+    @api_method
+    def get_fundamental(self,query):
+        return self.fundamental_reader.get_fundamental(query)
+
+    @api_method
+    def get_shares(self, assets, bar_count=1, end_dt=None, fields=None):
+        return self.data_portal.get_shares(assets,
+                                           self.datetime if not end_dt else end_dt,
+                                           bar_count,
+                                           fields)
+
+
 
     # Remain backwards compatibility
     @property

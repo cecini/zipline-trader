@@ -109,6 +109,7 @@ install:
   - conda create -n testenv --yes -q --use-local "pip<19" python=%PYTHON_VERSION% numpy=%NUMPY_VERSION% pandas=%PANDAS_VERSION% scipy=%SCIPY_VERSION% ta-lib=%TALIB_VERSION% bcolz=%BCOLZ_VERSION% numexpr=%NUMEXPR_VERSION% pytables=%PYTABLES_VERSION% h5py=%H5PY_VERSION% certifi=%CERTIFI_VERSION% -c quantopian -c https://conda.anaconda.org/quantopian/label/ci
   - activate testenv
   - python -m pip install -r etc/requirements_ib.txt --cache-dir=%CACHE_DIR%
+  - python -m pip install -r etc/requirements_tdx.txt --cache-dir=%CACHE_DIR%
   - bash etc/dev-install --cache-dir=%LOCALAPPDATA%\pip\Cache\pip_np%CONDA_NPY%py%CONDA_PY%
   - python -m pip freeze | sort
 

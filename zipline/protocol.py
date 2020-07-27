@@ -315,7 +315,9 @@ class Position(object):
         The held asset.
     amount : int
         Number of shares held. Short positions are represented with negative
-        values.
+        values. 
+    available: what
+         xxxxxxx
     cost_basis : float
         Average price at which currently-held shares were acquired.
     last_sale_price : float
@@ -345,6 +347,7 @@ class Position(object):
             for k in (
                 'asset',
                 'amount',
+                'available',
                 'cost_basis',
                 'last_sale_price',
                 'last_sale_date',
@@ -358,6 +361,7 @@ class Position(object):
         'position', {
             'sid',
             'amount',
+            'available',
             'cost_basis',
             'last_sale_price',
             'last_sale_date',
@@ -372,6 +376,7 @@ class _DeprecatedSidLookupPosition(object):
     def __init__(self, sid):
         self.sid = sid
         self.amount = 0
+        self.available = 0
         self.cost_basis = 0.0  # per share
         self.last_sale_price = 0.0
         self.last_sale_date = None
@@ -386,6 +391,7 @@ class _DeprecatedSidLookupPosition(object):
         'position', {
             'sid',
             'amount',
+            'available',
             'cost_basis',
             'last_sale_price',
             'last_sale_date',

@@ -23,10 +23,22 @@ from zipline.utils.pandas_utils import empty_dataframe
 from zipline.utils.sqlite_utils import group_into_chunks, coerce_string_to_conn
 from ._adjustments import load_adjustments_from_sqlite
 
+from sqlalchemy.sql import (
+    func
+)
+from sqlalchemy.orm import (
+    sessionmaker,
+    Query,
+)
+import pandas as pd
+from zipline.data.schema import Shares
+
+
 log = Logger(__name__)
 
 
-SQLITE_ADJUSTMENT_TABLENAMES = frozenset(['splits', 'dividends', 'mergers'])
+SQLITE_ADJUSTMENT_TABLENAMES = frozenset(['splits', 'dividends', 'mergers', 'shares'])
+
 
 UNPAID_QUERY_TEMPLATE = """
 SELECT sid, amount, pay_date from dividend_payouts
@@ -73,6 +85,13 @@ SQLITE_STOCK_DIVIDEND_PAYOUT_COLUMN_DTYPES = {
     'ratio': float,
 }
 
+SQLITE_SHARES_COLUMN_DTYPES = {
+    'sid': any_integer,
+    'effective_date': any_integer,
+    'shares': float,
+    'circulation': float,
+}
+
 
 def specialize_any_integer(d):
     out = {}
@@ -103,6 +122,7 @@ class SQLiteAdjustmentReader(object):
         'splits': ('effective_date',),
         'mergers': ('effective_date',),
         'dividends': ('effective_date',),
+        'shares': ('effective_date',),
         'dividend_payouts': (
             'declared_date', 'ex_date', 'pay_date', 'record_date',
         ),
@@ -118,6 +138,7 @@ class SQLiteAdjustmentReader(object):
         'splits': specialize_any_integer(SQLITE_ADJUSTMENT_COLUMN_DTYPES),
         'mergers': specialize_any_integer(SQLITE_ADJUSTMENT_COLUMN_DTYPES),
         'dividends': specialize_any_integer(SQLITE_ADJUSTMENT_COLUMN_DTYPES),
+        'shares': specialize_any_integer(SQLITE_SHARES_COLUMN_DTYPES),
         'dividend_payouts': specialize_any_integer(
             SQLITE_DIVIDEND_PAYOUT_COLUMN_DTYPES,
         ),
@@ -129,6 +150,7 @@ class SQLiteAdjustmentReader(object):
     @preprocess(conn=coerce_string_to_conn(require_exists=True))
     def __init__(self, conn):
         self.conn = conn
+        self.session = sessionmaker(bind=self.conn)()
 
     def __enter__(self):
         return self
@@ -217,6 +239,30 @@ class SQLiteAdjustmentReader(object):
         return [[Timestamp(adjustment[0], unit='s', tz='UTC'), adjustment[1]]
                 for adjustment in
                 adjustments_for_sid]
+ 
+    def get_shares(self,assets,date):
+        seconds = date.value / int(1e9)
+        return pd.DataFrame(self.session.qurey(
+            Shares.shares,
+            Shares.circulation,
+            func.max(Shares.effective_date).label('effective_date')
+        ).filter(
+            Shares.c.sid.in_(assets.sid.tolist())
+        ).filter(
+            Shares.effective_date <  seconds
+        ).all())
+
+    def get_shares_for_sid(self, sid):
+        t = (sid,)
+        c = self.conn.cursor()
+        shares_for_sid = c.execute(
+            "SELECT effective_date, shares, circulation FROM shares WHERE sid = ?", t
+        ).fetchall()
+        c.close()
+
+        return [[Timestamp(share[0], unit='s', tz='UTC'), share[1], share[2]] for share in shares_for_sid]
+
+
 
     def get_dividends_with_ex_date(self, assets, date, asset_finder):
         seconds = date.value / int(1e9)
@@ -430,6 +476,12 @@ class SQLiteAdjustmentWriter(object):
             frame['effective_date'] = frame['effective_date'].values.astype(
                 'datetime64[s]',
             ).astype('int64')
+        if tablename == 'shares':
+            return self._write(
+                tablename,
+                SQLITE_SHARES_COLUMN_DTYPES,
+                frame,
+            )            
         return self._write(
             tablename,
             SQLITE_ADJUSTMENT_COLUMN_DTYPES,
@@ -584,7 +636,8 @@ class SQLiteAdjustmentWriter(object):
               splits=None,
               mergers=None,
               dividends=None,
-              stock_dividends=None):
+              stock_dividends=None),
+              shares=None):
         """
         Writes data to a SQLite file to be read by SQLiteAdjustmentReader.
 
@@ -659,6 +712,7 @@ class SQLiteAdjustmentWriter(object):
         """
         self.write_frame('splits', splits)
         self.write_frame('mergers', mergers)
+        self.write_frame('shares', shares)
         self.write_dividend_data(dividends, stock_dividends)
         # Use IF NOT EXISTS here to allow multiple writes if desired.
         self.conn.execute(
@@ -677,6 +731,16 @@ class SQLiteAdjustmentWriter(object):
             "CREATE INDEX IF NOT EXISTS mergers_effective_date "
             "ON mergers(effective_date)"
         )
+
+        self.conn.execute(
+            "CREATE INDEX shares_sids "
+            "ON shares(sid)"
+        )
+        self.conn.execute(
+            "CREATE INDEX shares_effective_date "
+            "ON shares(effective_date)"
+        )
+
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS dividends_sid "
             "ON dividends(sid)"

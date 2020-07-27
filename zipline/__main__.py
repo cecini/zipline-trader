@@ -14,6 +14,7 @@ from zipline.utils.cli import Date, Timestamp
 from zipline.utils.run_algo import _run, BenchmarkSpec, load_extensions
 from zipline.extensions import create_args
 from zipline.gens import brokers
+from zipline.data.bundles.tdx_bundle import register_tdx
 
 try:
     __IPYTHON__
@@ -272,6 +273,12 @@ def ipython_only(option):
     is_flag=True,
     help='Get list of available brokers'
 )
+@click.option(
+    '--reader',
+    default="rocksdb",
+    help='minute reader'
+)
+
 @click.pass_context
 def run(ctx,
         algofile,
@@ -297,7 +304,8 @@ def run(ctx,
         broker_uri,
         state_file,
         realtime_bar_target,
-        list_brokers):
+        list_brokers,
+        reader):
     """Run a backtest for the given algorithm.
     """
 
@@ -392,7 +400,8 @@ def run(ctx,
         realtime_bar_target=realtime_bar_target,
         performance_callback=None,
         stop_execution_callback=None,
-        execution_id=None
+        execution_id=None,
+        reader = reader
     )
 
     if output == '-':
@@ -446,6 +455,38 @@ def zipline_magic(line, cell=None):
     help='The data bundle to ingest.',
 )
 @click.option(
+    '-a',
+    '--assets',
+    default=None,
+    help='a file contains list of assets to ingest. the file have tow columns,\n'
+         'separated by comma. the first column is codes of assets, and the ,\n'
+         'second column is the names of assets\n\n'
+         'examples:\n'
+         '  510050, 50ETF\n'
+         '  510500, 500ETF\n'
+         '  510300, 300ETF\n',
+)
+@click.option(
+    '--minute',
+    default=False,
+    type=bool,
+    help='whether to ingest minute, default False',
+)
+@click.option(
+    '--start',
+    default=None,
+    type=Date(tz='utc', as_timestamp=True),
+    help='start session',
+)
+@click.option(
+    '-f',
+    '--fundamental',
+    default=False,
+    type=bool,
+    help='whether to ingest fundamental data.',
+)
+
+@click.option(
     '--assets-version',
     type=int,
     multiple=True,
@@ -456,9 +497,24 @@ def zipline_magic(line, cell=None):
     default=True,
     help='Print progress information to the terminal.'
 )
-def ingest(bundle, assets_version, show_progress):
+@click.option(
+    '--writer',
+    default="bcolz",
+    help='writer class name for bundle to write minute data'
+)
+
+def ingest(bundle, assets, minute, start, fundamental, assets_version, show_progress, writer):
     """Ingest the data for the given bundle.
     """
+    if bundle == 'tdx':
+       if assets:
+         if not os.path.exists(assets):
+            raise FileNotFoundError
+         df = pd.read_csv(assets, names=['symbol', 'name'], dtype=str, encoding='utf8')
+         register_tdx(df,minute,start,fundamental)
+      else:
+         register_tdx(None,minute,start,fundamental)
+
     bundles_module.ingest(
         bundle,
         os.environ,

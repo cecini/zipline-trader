@@ -184,6 +184,7 @@ def quandl_bundle(environ,
                   minute_bar_writer,
                   daily_bar_writer,
                   adjustment_writer,
+                  fundamental_writer,
                   calendar,
                   start_session,
                   end_session,
@@ -317,7 +318,8 @@ def quantopian_quandl_bundle(environ,
                              end_session,
                              cache,
                              show_progress,
-                             output_dir):
+                             output_dir,
+                             writer="bcolz"):
 
     if show_progress:
         data = download_with_progress(

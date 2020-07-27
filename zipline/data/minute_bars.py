@@ -49,6 +49,7 @@ from zipline.utils.memoize import lazyval
 logger = logbook.Logger('MinuteBars')
 
 US_EQUITIES_MINUTES_PER_DAY = 390
+CN_EQUITIES_MINUTES_PER_DAY = 240
 FUTURES_MINUTES_PER_DAY = 1440
 
 DEFAULT_EXPECTEDLEN = US_EQUITIES_MINUTES_PER_DAY * 252 * 15
@@ -465,8 +466,7 @@ class BcolzMinuteBarWriter(object):
         self._default_ohlc_ratio = default_ohlc_ratio
         self._ohlc_ratios_per_sid = ohlc_ratios_per_sid
 
-        self._minute_index = _calc_minute_index(
-            self._schedule.market_open, self._minutes_per_day)
+        self._minute_index = calendar.minutes_in_range(self._schedule.market_open[0],self._schedule.market_close[-1])
 
         if write_metadata:
             metadata = BcolzMinuteBarMetadata(
@@ -644,14 +644,17 @@ class BcolzMinuteBarWriter(object):
             # No need to pad.
             return
 
-        if last_date == pd.NaT:
+        if last_date is pd.NaT:
             # If there is no data, determine how many days to add so that
             # desired days are written to the correct slots.
             days_to_zerofill = tds[tds.slice_indexer(end=date)]
         else:
-            days_to_zerofill = tds[tds.slice_indexer(
-                start=last_date + tds.freq,
-                end=date)]
+            logger.error("'data between {},{} is missing, please use start_date: {}'.format(last_date,date,last_date)")
+            raise Exception()
+            # days_to_zerofill = tds[tds.slice_indexer(
+            #     start=last_date + tds.freq,
+            #     end=date)]
+            
 
         self._zerofill(table, len(days_to_zerofill))
 
@@ -718,6 +721,8 @@ class BcolzMinuteBarWriter(object):
                 volume : float64|int64
             index : DatetimeIndex of market minutes.
         """
+        if df is None or df.empty:
+            return        
         cols = {
             'open': df.open.values,
             'high': df.high.values,
@@ -1001,11 +1006,14 @@ class BcolzMinuteBarReader(MinuteBarReader):
         List of DatetimeIndex representing the minutes to exclude because
         of early closes.
         """
-        market_opens = self._market_opens.values.astype('datetime64[m]')
-        market_closes = self._market_closes.values.astype('datetime64[m]')
-        minutes_per_day = (market_closes - market_opens).astype(np.int64)
+        slicer = self.calendar.schedule.index.slice_indexer(
+            self._start_session,
+            self._end_session,
+        )
+        minutes_per_day = self.calendar._minutes_per_session[slicer]
+        
         early_indices = np.where(
-            minutes_per_day != self._minutes_per_day - 1)[0]
+            minutes_per_day != self._minutes_per_day)[0]
         early_opens = self._market_opens[early_indices]
         early_closes = self._market_closes[early_indices]
         minutes = [(market_open, early_close)

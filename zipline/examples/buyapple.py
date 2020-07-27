@@ -19,7 +19,7 @@ from zipline.finance import commission, slippage
 
 
 def initialize(context):
-    context.asset = symbol('AAPL')
+    context.asset = symbol('510050')
 
     # Explicitly set the commission/slippage to the "old" value until we can
     # rebuild example data.

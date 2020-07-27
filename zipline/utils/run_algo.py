@@ -21,9 +21,11 @@ import six
 from toolz import concatv
 from trading_calendars import get_calendar
 
+
 from zipline.data import bundles
 from zipline.data.benchmarks import get_benchmark_returns_from_file
 from zipline.data.data_portal import DataPortal
+from zipline.gens.brokers.broker import Broker
 from zipline.data.data_portal_live import DataPortalLive
 from zipline.finance import metrics
 from zipline.finance.trading import SimulationParameters
@@ -33,6 +35,7 @@ from zipline.pipeline.loaders import USEquityPricingLoader
 import zipline.utils.paths as pth
 from zipline.extensions import load
 from zipline.errors import SymbolNotFound
+from zipline.data.cn_loader import load_market_data
 from zipline.algorithm import TradingAlgorithm, NoBenchmark
 from zipline.algorithm_live import LiveTradingAlgorithm
 from zipline.finance.blotter import Blotter
@@ -92,7 +95,8 @@ def _run(handle_data,
          performance_callback,
          stop_execution_callback,
          teardown,
-         execution_id):
+         execution_id,
+         reader = "bcolz"):
     """Run a backtest for the given algorithm.
 
     This is shared between the cli and :func:`zipline.run_algo`.
@@ -114,10 +118,14 @@ def _run(handle_data,
         bundle,
         environ,
         bundle_timestamp,
+        reader = reader,
     )
 
-    if trading_calendar is None:
-        trading_calendar = get_calendar('XNYS')
+    if not trading_calendar:
+        trading_calendar = get_calendar('SHSZ')
+    elif isinstance(trading_calendar,str):
+        trading_calendar = get_calendar(trading_calendar)
+
 
     # date parameter validation
     if trading_calendar.session_distance(start, end) < 1:
@@ -188,6 +196,8 @@ def _run(handle_data,
         else:
             click.echo(algotext)
 
+
+
     first_trading_day = \
         bundle_data.equity_minute_bar_reader.first_trading_day
 
@@ -196,7 +206,7 @@ def _run(handle_data,
                        else DataPortal)
 
     data = DataPortalClass(
-        bundle_data.asset_finder,
+        bundle_data.asset_finder, # need use sqlite url?
         trading_calendar=trading_calendar,
         first_trading_day=first_trading_day,
         equity_minute_reader=bundle_data.equity_minute_bar_reader,
@@ -257,6 +267,7 @@ def _run(handle_data,
             benchmark_sid=benchmark_sid,
             performance_callback=performance_callback,
             stop_execution_callback=stop_execution_callback,
+            fundamental_reader=bundle_data.fundamental_reader,
             **{
                 'initialize': initialize,
                 'handle_data': handle_data,
@@ -357,6 +368,7 @@ def run_algorithm(start,
                   bundle='quantopian-quandl',
                   bundle_timestamp=None,
                   trading_calendar=None,
+                  output='-',
                   metrics_set='default',
                   benchmark_returns=None,
                   default_extension=True,
@@ -369,7 +381,8 @@ def run_algorithm(start,
                   stop_execution_callback=None,
                   execution_id=None,
                   state_filename=None,
-                  realtime_bar_target=None
+                  realtime_bar_target=None,
+                  reader = "bcolz"
                   ):
     """
     Run a trading algorithm.
@@ -407,6 +420,7 @@ def run_algorithm(start,
         current time.
     trading_calendar : TradingCalendar, optional
         The trading calendar to use for your backtest.
+    output: output result    
     metrics_set : iterable[Metric] or str, optional
         The set of metrics to compute in the simulation. If a string is passed,
         resolve the set with :func:`zipline.finance.metrics.load`.
@@ -452,6 +466,30 @@ def run_algorithm(start,
     """
     load_extensions(default_extension, extensions, strict_extensions, environ)
 
+
+    if broker and not isinstance(broker,Broker):
+        raise ValueError('broker must be a Broker instance')
+
+    # check that the start and end dates are passed correctly
+    if not broker and start is None and end is None:
+        # check both at the same time to avoid the case where a user
+        # does not pass either of these and then passes the first only
+        # to be told they need to pass the second argument also
+        raise Exception('must specify start date and end date')
+
+    if not broker and start is None:
+        raise Exception("must specify a start date")
+    if not broker and end is None:
+        raise Exception("must specify an end date")
+
+    if broker and state_filename is None:
+        raise Exception("must specify state-file with live trading")
+
+    if broker and realtime_bar_target is None:
+        raise Exception("must specify realtime-bar-target with live trading")
+
+
+
     benchmark_spec = BenchmarkSpec.from_returns(benchmark_returns)
 
     return _run(
@@ -469,7 +507,7 @@ def run_algorithm(start,
         bundle_timestamp=bundle_timestamp,
         start=start,
         end=end,
-        output=os.devnull,
+        output=output,
         trading_calendar=trading_calendar,
         print_algo=False,
         metrics_set=metrics_set,
@@ -482,7 +520,8 @@ def run_algorithm(start,
         realtime_bar_target=realtime_bar_target,
         performance_callback=performance_callback,
         stop_execution_callback=stop_execution_callback,
-        execution_id=execution_id
+        execution_id=execution_id,
+        reader=reader
     )
 
 

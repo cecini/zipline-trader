@@ -264,7 +264,7 @@ if 'sdist' in sys.argv:
 
 setup(
     name='zipline-trader',
-    url="https://github.com/shlomikushchi/zipline-trader",
+    url="https://github.com/cecini/zipline-trader",
     version=versioneer.get_version(),
     cmdclass=LazyBuildExtCommandClass(versioneer.get_cmdclass()),
     description='A backtester for financial algorithms.',
@@ -273,14 +273,14 @@ setup(
             'zipline = zipline.__main__:main',
         ],
     },
-    author='zipline-trader community',
+    author='cecini,
     author_email='',
-    maintainer='Shlomi Kushchi',
+    maintainer='cecini',
     packages=find_packages(include=['zipline', 'zipline.*']),
     ext_modules=ext_modules,
     include_package_data=True,
     package_data={root.replace(os.sep, '.'):
-                  ['*.pyi', '*.pyx', '*.pxi', '*.pxd']
+                  ['*.pyi', '*.pyx', '*.pxi', '*.pxd', '*.pyd']
                   for root, dirnames, filenames in os.walk('zipline')
                   if '__pycache__' not in root},
     license='Apache 2.0',
