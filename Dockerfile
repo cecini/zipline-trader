@@ -43,7 +43,8 @@ ENV PROJECT_DIR=/projects \
 RUN mkdir ${PROJECT_DIR} \
     && apt-get -y update \
     && apt-get -y install libfreetype6-dev libpng-dev libopenblas-dev liblapack-dev gfortran libhdf5-dev \
-    && curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz
+    && curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz \
+    && curl -O https://codeload.github.com/JaysonAlbert/tdx/zip/master -O && unzip master
 
 #
 # build and install zipline from source.  install TA-Lib after to ensure
@@ -52,6 +53,8 @@ RUN mkdir ${PROJECT_DIR} \
 
 WORKDIR /ta-lib
 
+
+# should requirement -c etc/requirements_locked.txt
 RUN pip install 'numpy==1.14.1' \
   && pip install 'scipy==1.0.0' \
   && pip install 'pandas==0.22.0' \
@@ -65,6 +68,8 @@ RUN pip install 'numpy==1.14.1' \
   && pip install matplotlib \
   && pip install jupyter
 
+WORKDIR /tdx-master
+RUN { rm setup.py && awk '{gsub("0.19", "=0.22.0", $0); print}' > setup.py; } < setup.py && pip install -e .
 #
 # This is then only file we need from source to remain in the
 # image after build and install.
@@ -84,7 +89,7 @@ EXPOSE ${NOTEBOOK_PORT}
 
 ADD . /zipline
 WORKDIR /zipline
-RUN pip install -e . --default-timeout=200
+RUN pip3 install setuptools==45 && pip install pip-tools && pip-compile --no-index --output-file=etc/requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in &&  pip install -e . --default-timeout=200
 
 #
 # start the jupyter server

@@ -62,7 +62,7 @@ class RocksdbMinuteBarWriter(BcolzMinuteBarWriter):
     rootdir : string
         Path to the root directory into which to write the metadata and
         bcolz subdirectories.
-    calendar : zipline.utils.calendars.trading_calendar.TradingCalendar
+    calendar : zipline.utils.calendars.TradingCalendar
         The trading calendar on which to base the minute bars. Used to
         get the market opens used as a starting point for each periodic
         span of minutes in the index, and the market closes that

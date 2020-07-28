@@ -30,8 +30,9 @@ FROM quantopian/zipline
 WORKDIR /zipline
 
 RUN apt-get install -y vim
+RUN python setup.py build_ext -f --inplace
+#RUN pip install -r etc/requirements_dev.in -r etc/requirements_blaze.in -c etc/requirements_locked.txt
 RUN pip install -r etc/requirements_dev.in -r etc/requirements_blaze.in
 # Clean out any cython assets. The pip install re-builds them.
-RUN python setup.py build_ext -f --inplace
 # RUN find . -type f -name '*.c' -exec rm {} + && pip install -e .[all]
 RUN pip install -e .[all]

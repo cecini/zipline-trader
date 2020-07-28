@@ -273,7 +273,7 @@ setup(
             'zipline = zipline.__main__:main',
         ],
     },
-    author='cecini,
+    author='cecini',
     author_email='',
     maintainer='cecini',
     packages=find_packages(include=['zipline', 'zipline.*']),
