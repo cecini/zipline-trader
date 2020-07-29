@@ -66,7 +66,8 @@ iso4217>=1.6.20180829
 pytdx>=1.57
 cn-treasury_curve>=0.6
 #cn-stock-holidays>=1.1
-tdx-wrapper>=0.61
+#tdx-wrapper>=0.61
+#-e ../tdx-master
 zerorpc>=0.6.1
 # python-rocksdb>=0.6.7
 

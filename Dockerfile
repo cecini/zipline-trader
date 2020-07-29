@@ -68,8 +68,8 @@ RUN pip install 'numpy==1.14.1' \
   && pip install matplotlib \
   && pip install jupyter
 
-WORKDIR /tdx-master
-RUN { rm setup.py && awk '{gsub("0.19", "=0.22.0", $0); print}' > setup.py; } < setup.py && pip install -e .
+#WORKDIR /tdx-master
+#RUN { rm setup.py && awk '{gsub("0.19", "=0.22.0", $0); print}' > setup.py; } < setup.py && pip install -e .
 #
 # This is then only file we need from source to remain in the
 # image after build and install.
@@ -89,7 +89,7 @@ EXPOSE ${NOTEBOOK_PORT}
 
 ADD . /zipline
 WORKDIR /zipline
-RUN pip3 install setuptools==45 && pip install pip-tools && pip-compile --no-index --output-file=etc/requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in &&  pip install -e . --default-timeout=200
+RUN pip3 install setuptools==45 && pip install pip-tools && pip-compile --no-emit-index-url --output-file=etc/requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in &&  pip install -e . --default-timeout=200
 
 #
 # start the jupyter server
