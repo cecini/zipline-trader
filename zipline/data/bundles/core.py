@@ -584,8 +584,8 @@ def _make_bundle_core():
         if reader == "rocksdb":
             minute_reader = RocksdbMinuteBarReader(
                 minute_equity_path(name, timestr, environ=environ),
-            )
-jjj        
+            )        
+
         return BundleData(
             asset_finder=AssetFinder(
                 asset_db_path(name, timestr, environ=environ),
