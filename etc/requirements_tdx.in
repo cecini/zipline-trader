@@ -1,2 +1,3 @@
 #-e git://github.com/cecini/tdx.git@05e06be693ccfafb68d601bf7f82d2c2f3d21ac0#egg=tdx
 -e git://github.com/cecini/tdx.git@192935e39862992953a05d80b8e7112c0e9128fa#egg=tdx-wrapper
+-e git://github.com/cecini/cn_stock_holidays.git@master#egg=cn-stock-holidays

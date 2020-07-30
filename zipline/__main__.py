@@ -507,13 +507,13 @@ def ingest(bundle, assets, minute, start, fundamental, assets_version, show_prog
     """Ingest the data for the given bundle.
     """
     if bundle == 'tdx':
-       if assets:
-         if not os.path.exists(assets):
-            raise FileNotFoundError
-         df = pd.read_csv(assets, names=['symbol', 'name'], dtype=str, encoding='utf8')
-         register_tdx(df,minute,start,fundamental)
-      else:
-         register_tdx(None,minute,start,fundamental)
+        if assets:
+            if not os.path.exists(assets):
+               raise FileNotFoundError
+            df = pd.read_csv(assets, names=['symbol', 'name'], dtype=str, encoding='utf8')
+            register_tdx(df,minute,start,fundamental)
+        else:
+            register_tdx(None,minute,start,fundamental)
 
     bundles_module.ingest(
         bundle,

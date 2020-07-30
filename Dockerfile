@@ -91,8 +91,9 @@ COPY  ./etc/ /ziplinedeps/etc/
 WORKDIR /ziplinedeps
 
 RUN pip3 install setuptools==45 && pip install pip-tools 
-
-RUN pip install -e  git://github.com/cecini/tdx.git@192935e39862992953a05d80b8e7112c0e9128fa#egg=tdx-wrapper 
+# or pip install -r etc/requirments_tdx.in -c etc/requirements_locked.txt after the pip-compile
+#RUN pip install -e  git://github.com/cecini/tdx.git@192935e39862992953a05d80b8e7112c0e9128fa#egg=tdx-wrapper 
+#-e git://github.com/cecini/cn_stock_holidays.git@master#egg=cn-stock-holidays
 
 RUN pip-compile --no-emit-index-url --output-file=etc/requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in -P numpy==1.14.1 -P scipy==1.0.0 -P pandas==0.22.0 -P pandas_datareader==0.4.0 -P dask==0.17.1 -P statsmodels==0.9.0  
 
@@ -100,8 +101,9 @@ RUN pip-compile --no-emit-index-url --output-file=etc/requirements_locked.txt et
 ADD . /zipline
 
 WORKDIR /zipline
-
-RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -e . --default-timeout=200
+#RUN pip install -r etc/requirments_tdx.in -c etc/requirements_locked.txt 
+#RUN pip install -r etc/requirments_tdx.in 
+RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirments_tdx.in &&  pip install -e . --default-timeout=200
 
 
 #
