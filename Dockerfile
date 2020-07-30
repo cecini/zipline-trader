@@ -55,6 +55,7 @@ WORKDIR /ta-lib
 
 
 # should requirement -c etc/requirements_locked.txt
+# matplotlib > 3.3.0 depend numpy> 1.15.1
 RUN pip install 'numpy==1.14.1' \
   && pip install 'scipy==1.0.0' \
   && pip install 'pandas==0.22.0' \
@@ -65,7 +66,7 @@ RUN pip install 'numpy==1.14.1' \
   && make \
   && make install \
   && pip install TA-Lib \
-  && pip install matplotlib \
+  && pip install 'matplotlib==3.2.2' \
   && pip install jupyter
 
 #WORKDIR /tdx-master
