@@ -43,7 +43,7 @@ ENV PROJECT_DIR=/projects \
 RUN mkdir ${PROJECT_DIR} \
     && apt-get -y update \
     && apt-get -y install libfreetype6-dev libpng-dev libopenblas-dev liblapack-dev gfortran libhdf5-dev \
-    && curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz \
+    && curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz 
 
 #
 # build and install zipline from source.  install TA-Lib after to ensure
