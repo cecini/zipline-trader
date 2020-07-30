@@ -636,7 +636,7 @@ class SQLiteAdjustmentWriter(object):
               splits=None,
               mergers=None,
               dividends=None,
-              stock_dividends=None),
+              stock_dividends=None,
               shares=None):
         """
         Writes data to a SQLite file to be read by SQLiteAdjustmentReader.

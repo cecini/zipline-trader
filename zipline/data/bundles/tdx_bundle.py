@@ -11,7 +11,7 @@ from zipline.utils.calendars import get_calendar
 from zipline.utils.sqlite_utils import coerce_string_to_eng
 from sqlalchemy import create_engine
 
-from zipline.data.us_equity_pricing import (
+from ..adjustments import (
     SQLITE_ADJUSTMENT_COLUMN_DTYPES,
     SQLITE_SHARES_COLUMN_DTYPES,
     SQLITE_STOCK_DIVIDEND_PAYOUT_COLUMN_DTYPES,
