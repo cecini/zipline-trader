@@ -126,7 +126,7 @@ class AssetDispatchBarReader(with_metaclass(ABCMeta)):
             out = self._make_raw_array_out(field, shape)
             for t, arrays in iteritems(batched_arrays):
                 if arrays is not None and len(arrays[i]) > 0:
-                out[:, out_pos[t]] = arrays[i]
+                    out[:, out_pos[t]] = arrays[i]
             results.append(out)
 
         return results
