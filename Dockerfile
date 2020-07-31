@@ -103,7 +103,7 @@ ADD . /zipline
 WORKDIR /zipline
 #RUN pip install -r etc/requirments_tdx.in -c etc/requirements_locked.txt 
 #RUN pip install -r etc/requirments_tdx.in 
-RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirments_tdx.in &&  pip install -e . --default-timeout=200
+RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirements_tdx.in &&  pip install -e . --default-timeout=200
 
 
 #
