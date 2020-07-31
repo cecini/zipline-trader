@@ -7,7 +7,9 @@ import pytz
 import logging as logger
 from zipline.utils.util import fillna
 from . import core as bundles
-from zipline.utils.calendars import get_calendar
+from zipline.utils.calendars import get_calendar, register_calendar
+from cn_stock_holidays.zipline.exchange_calendar_shsz import SHSZExchangeCalendar
+
 from zipline.utils.sqlite_utils import coerce_string_to_eng
 from sqlalchemy import create_engine
 
@@ -355,6 +357,8 @@ def register_tdx(assets=None, minute=False, start=None, fundamental=False, end=N
         bundles.unregister('tdx')
     except bundles.UnknownBundle:
         pass
+
+    register_calendar('SHSZ', SHSZExchangeCalendar(), True)
     calendar = get_calendar('SHSZ')
     if start:
         if not calendar.is_session(start):
