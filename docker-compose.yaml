@@ -1,0 +1,91 @@
+version: "3.8"
+services:
+        # db:
+        #   image: mysql:8.0.19
+        #   command: '--default-authentication-plugin=mysql_native_password'
+        #   restart: always
+        #   environment:
+        #     - MYSQL_DATABASE=example
+        #     - MYSQL_ROOT_PASSWORD=password
+
+        # app:
+        #   build: app
+        #   restart: always
+
+        # web:
+        #   build: web
+        #   restart: always
+        #   ports:
+        #     - 80:80
+  zipline:
+          # build: .
+    build:
+      context: .
+      # dockerfile: Dockerfile-dev
+    image: quantopian/zipline:latest
+    #    volumes:
+    #            #- /home/ubuntu/build/zipline-trader/notebooks:/projects    
+    #      - ./notebooks:/projects    
+    #      - ~/.zipline:/root/.zipline 
+    #        #    - ./:/zipline  
+    #      - type: bind
+    #        source: .
+    #        target: /zipline
+    #  restart: always
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1  
+      - 8.8.4.4  
+
+
+  ziplinedev:
+          # build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    image: quantopian/ziplinedev:latest
+    restart: always
+    environment:
+      - PW_HASH="u'sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25'"
+    ports:
+      - 8888:8888      
+    volumes:
+            #- /home/ubuntu/build/zipline-trader/notebooks:/projects    
+      - ./notebooks:/projects    
+      - ~/.zipline:/root/.zipline 
+        #    - ./:/zipline  
+        #
+        #   - type: bind
+        #     source: .
+        #     target: /zipline
+        #     consistency: cached
+      - .:/zipline:cached  
+        #      - /zipline/zipline_trader.egg-info        
+        #      - /zipline/zipline/assets/_assets.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/assets/continuous_futures.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/adjustment.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/_factorize.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/_float64window.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/_int64window.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/src
+        #      - /zipline/zipline/lib/_uint8window.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/_labelwindow.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/lib/rank.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/data/_equities.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/data/_adjustments.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/_protocol.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/finance/_finance_ext.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/gens/sim_engine.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/data/_minute_bar_internal.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/data/_resample.cpython-36m-x86_64-linux-gnu.so
+        #      - /zipline/zipline/pipeline/loaders/blaze/_core.cpython-36m-x86_64-linux-gnu.so
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1  
+      - 8.8.4.4  
+  
+        
+
+

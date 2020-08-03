@@ -82,45 +82,80 @@ def window_specialization(typename):
     """Make an extension for an AdjustedArrayWindow specialization."""
     return Extension(
         'zipline.lib._{name}window'.format(name=typename),
-        ['zipline/lib/_{name}window.pyx'.format(name=typename)],
-        depends=['zipline/lib/_windowtemplate.pxi'],
+        ['/zipline/zipline/lib/_{name}window.pyx'.format(name=typename)],
+       # depends=['/zipline/zipline/lib/_windowtemplate.pxi'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        depends=['/zipline/zipline/lib/_windowtemplate.pxi'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     )
 
 
 ext_modules = [
-    Extension('zipline.assets._assets', ['zipline/assets/_assets.pyx']),
+    Extension('zipline.assets._assets', ['/zipline/zipline/assets/_assets.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
     Extension('zipline.assets.continuous_futures',
-              ['zipline/assets/continuous_futures.pyx']),
-    Extension('zipline.lib.adjustment', ['zipline/lib/adjustment.pyx']),
-    Extension('zipline.lib._factorize', ['zipline/lib/_factorize.pyx']),
+              ['/zipline/zipline/assets/continuous_futures.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+    Extension('zipline.lib.adjustment', ['/zipline/zipline/lib/adjustment.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+    Extension('zipline.lib._factorize', ['/zipline/zipline/lib/_factorize.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
     window_specialization('float64'),
     window_specialization('int64'),
     window_specialization('int64'),
     window_specialization('uint8'),
     window_specialization('label'),
-    Extension('zipline.lib.rank', ['zipline/lib/rank.pyx']),
-    Extension('zipline.data._equities', ['zipline/data/_equities.pyx']),
-    Extension('zipline.data._adjustments', ['zipline/data/_adjustments.pyx']),
-    Extension('zipline._protocol', ['zipline/_protocol.pyx']),
+    Extension('zipline.lib.rank', ['/zipline/zipline/lib/rank.pyx']),
+    Extension('zipline.data._equities', ['/zipline/zipline/data/_equities.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+    Extension('zipline.data._adjustments', ['/zipline/zipline/data/_adjustments.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+    Extension('zipline._protocol', ['/zipline/zipline/_protocol.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
     Extension(
         'zipline.finance._finance_ext',
-        ['zipline/finance/_finance_ext.pyx'],
+        ['/zipline/zipline/finance/_finance_ext.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
     ),
-    Extension('zipline.gens.sim_engine', ['zipline/gens/sim_engine.pyx']),
+    Extension('zipline.gens.sim_engine', ['/zipline/zipline/gens/sim_engine.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
     Extension(
         'zipline.data._minute_bar_internal',
-        ['zipline/data/_minute_bar_internal.pyx']
+        ['/zipline/zipline/data/_minute_bar_internal.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
     ),
     Extension(
         'zipline.data._resample',
-        ['zipline/data/_resample.pyx']
+        ['/zipline/zipline/data/_resample.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
     ),
     Extension(
         'zipline.pipeline.loaders.blaze._core',
-        ['zipline/pipeline/loaders/blaze/_core.pyx'],
-        depends=['zipline/lib/adjustment.pxd'],
+        ['/zipline/zipline/pipeline/loaders/blaze/_core.pyx'],
+        depends=['/zipline/zipline/lib/adjustment.pxd']
     ),
 ]
+# ext_modules = [
+#     Extension('zipline.assets._assets', ['/zipline/zipline/assets/_assets.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline.assets.continuous_futures',
+#               ['/zipline/zipline/assets/continuous_futures.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline.lib.adjustment', ['/zipline/zipline/lib/adjustment.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline.lib._factorize', ['/zipline/zipline/lib/_factorize.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     window_specialization('float64'),
+#     window_specialization('int64'),
+#     window_specialization('int64'),
+#     window_specialization('uint8'),
+#     window_specialization('label'),
+#     Extension('zipline.lib.rank', ['/zipline/zipline/lib/rank.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline.data._equities', ['/zipline/zipline/data/_equities.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline.data._adjustments', ['/zipline/zipline/data/_adjustments.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension('zipline._protocol', ['/zipline/zipline/_protocol.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension(
+#         'zipline.finance._finance_ext',
+#         ['/zipline/zipline/finance/_finance_ext.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+#     ),
+#     Extension('zipline.gens.sim_engine', ['/zipline/zipline/gens/sim_engine.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]),
+#     Extension(
+#         'zipline.data._minute_bar_internal',
+#         ['/zipline/zipline/data/_minute_bar_internal.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+#     ),
+#     Extension(
+#         'zipline.data._resample',
+#         ['/zipline/zipline/data/_resample.pyx'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+#     ),
+#     Extension(
+#         'zipline.pipeline.loaders.blaze._core',
+#         ['/zipline/zipline/pipeline/loaders/blaze/_core.pyx'],
+#         depends=['/zipline/zipline/lib/adjustment.pxd'],define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+#     ),
+# ]
 
 
 STR_TO_CMP = {
@@ -215,12 +250,12 @@ def read_requirements(path,
 
 
 def install_requires(conda_format=False):
-    return read_requirements('etc/requirements.in', conda_format=conda_format)
+    return read_requirements('/zipline/etc/requirements.in', conda_format=conda_format)
 
 
 def extras_requires(conda_format=False):
     extras = {
-        extra: read_requirements('etc/requirements_{0}.in'.format(extra),
+        extra: read_requirements('/zipline/etc/requirements_{0}.in'.format(extra),
                                  conda_format=conda_format)
         for extra in ('dev', 'talib')
     }
@@ -248,7 +283,7 @@ conda_build = os.path.basename(sys.argv[0]) in ('conda-build',  # unix
                                                 'conda-build-script.py')  # win
 
 setup_requires = setup_requirements(
-    'etc/requirements_build.in',
+    '/zipline/etc/requirements_build.in',
     ('Cython', 'numpy'),
     conda_format=conda_build,
 )
