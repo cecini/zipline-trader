@@ -41,6 +41,7 @@ ENV PROJECT_DIR=/projects \
 WORKDIR /
 
 FROM zipline-base AS zipline-maindep
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 #
 # install TA-Lib and other prerequisites
 #
@@ -105,24 +106,30 @@ RUN --mount=type=cache,target=/root/.cache/pip-compile pip-compile --no-emit-ind
 
 ADD . /zipline
 
+#RUN mkdir /zipline
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+#RUN --mount=type=bind,source=.,target=/zipline,rw --mount=type=cache,id=custom-pip,target=/root/.cache/pip cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirements_tdx.in 
 RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirements_tdx.in 
-RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -e git://github.com/cython/cython.git@3.0a6#egg=Cython
+#RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip --mount=type=cache,id=custom-pip2,target=./src pip install -e git://github.com/cython/cython.git@3.0a6#egg=Cython
 
 WORKDIR /zipline
 #RUN git clean -xfd
-ENV PYTHONPATH=/ziplinedeps:/zipline 
+#ENV PYTHONPATH=/ziplinedeps:/zipline 
 #ENV PYTHONPATH=/zipline
 #RUN pip install -r etc/requirments_tdx.in -c etc/requirements_locked.txt 
 #RUN pip install -r etc/requirments_tdx.in 
 #RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirements_tdx.in && cd /ta-lib && python /zipline/setup.py -v build_ext -f --inplace &&  python /zipline/setup.py develop
 #RUN cp /ziplinedeps/etc/requirements_locked.txt /zipline/etc && pip install -r etc/requirements_tdx.in 
 
-RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r requirs
-RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip python /zipline/setup.py -v build_ext -b /ziplinedeps
+#RUN --mount=type=bind,source=.,target=/zipline,readwrite --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r requirs
+#RUN --mount=type=bind,source=.,target=/zipline,readwrite --mount=type=cache,id=custom-pip,target=/root/.cache/pip python /zipline/setup.py -v build_ext -b /ziplinedeps
+#RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip python /zipline/setup.py -v build_ext -b /ziplinedeps
 #RUN cd /usr/local/lib/python3.6/site-packages 
-RUN --mount=type=cache,id=custom-pip1,target=/root/.cache/pip1 python /zipline/setup.py develop 
-#RUN --mount=type=bind,id=custom-pip1,target=/root/.cache/pip1 python /zipline/setup.py develop 
+#RUN --mount=type=cache,id=custom-pip1,target=/root/.cache/pip1 python /zipline/setup.py develop 
+#RUN --mount=type=bind,source=.,target=/zipline,readwrite pip install -e . && cp  -ar zipline_trader.egg-info /ziplinedeps  
+#RUN --mount=type=cache,source=.,target=/zipline,readwrite pip install -e . && cp  -ar zipline_trader.egg-info /ziplinedeps  
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -e . 
+#&& cp  -ar zipline_trader.egg-info /ziplinedeps  
 #RUN python setup.py develop --egg-path ./../ziplinedeps
 #RUN python setup.py develop --install-dir /ziplinedeps
 #RUN pip install -e .

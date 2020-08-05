@@ -28,7 +28,8 @@
 #
 FROM quantopian/zipline
 
-WORKDIR /zipline
+ADD . /zipline
+WORKDIR /ziplinedeps
 # # If host is running squid-deb-proxy on port 8000, populate /etc/apt/apt.conf.d/30proxy
 # # By default, squid-deb-proxy 403s unknown sources, so apt shouldn't proxy ppa.launchpad.net
 # RUN apt-get install -y net-tools netcat &&  route -n | awk '/^0.0.0.0/ {print $2}' > /tmp/host_ip.txt
@@ -37,17 +38,32 @@ WORKDIR /zipline
 #   && (echo "Acquire::http::Proxy::ppa.launchpad.net DIRECT;" >> /etc/apt/apt.conf.d/30proxy) \
 #   || echo "No squid-deb-proxy detected on docker host"
 # 
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt apt-get install -y vim
+#RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+#RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt apt-get install -y vim
+#RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt apt-get update &&  apt-get install -y vim
 #R$UN python setup.py build_ext -f --inplace
 #RUN python setup.py build_ext -f --build-lib /ziplinedeps
 #RUN cd /usr/local/lib/python3.6/site-packages && python /zipline/setup.py -v build_ext -b /ziplinedeps
 #RUN pip install -r etc/requirements_dev.in -r etc/requirements_blaze.in -c etc/requirements_locked.txt
 RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip cache list
+#RUN --mount=type=bind,source=.,target=/zipline,readwrite --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r etc/requirements_dev.in -r etc/requirements_blaze.in
 RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r etc/requirements_dev.in -r etc/requirements_blaze.in
 # Clean out any cython assets. The pip install re-builds them.
 # RUN find . -type f -name '*.c' -exec rm {} + && pip install -e .[all]
 #RUN pip install -e .[all]
 #RUN cd /ta-lib  && python /zipline/setup.py develop
 #RUN python setup.py develop --install-dir /ziplinedeps
-RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip python  /zipline/setup.py develop 
+#RUN cd /usr/local/lib/python3.6/site-packages 
+#RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip python  /zipline/setup.py develop 
+
+#cp  -ar zipline_trader.egg-info /ziplinedeps
+#RUN rm -rf /ziplinedeps/zipline_trader.egg-info
+WORKDIR /zipline
+#ENV TDX_DEBUG=1
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install pdbpp
+RUN pip uninstall -y pytdx && pip install -e git://github.com/cecini/pytdx.git@master#egg=pytdx 
+RUN python setup.py build_ext  --inplace
+RUN pip install -e .
+#RUN --mount=type=bind,source=.,target=/zipline,readwrite pip install -e . 
+#RUN pip install -e . 
