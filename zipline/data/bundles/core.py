@@ -141,7 +141,7 @@ def from_bundle_ingest_dirname(cs):
     ts : pandas.Timestamp
         The time when this ingestion happened.
     """
-    return pd.Timestamp(cs.replace(';', ':'))
+    return pd.to_datetime(cs.replace(';', ':'))
 
 
 def ingestions_for_bundle(bundle, environ=None):
