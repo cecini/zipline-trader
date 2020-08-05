@@ -32,6 +32,15 @@ services:
     #        source: .
     #        target: /zipline
     #  restart: always
+    restart: always
+    environment:
+      - PW_HASH="u'sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25'"
+    ports:
+      - 8888:8888      
+    volumes:
+            #- /home/ubuntu/build/zipline-trader/notebooks:/projects    
+      - ./notebooks:/projects    
+      - ~/.zipline:/root/.zipline 
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -48,8 +57,11 @@ services:
     restart: always
     environment:
       - PW_HASH="u'sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25'"
+      - TDX_DEBUG=1  
     ports:
       - 8888:8888      
+    stdin_open: true   # Add this line into your service
+    tty: true   # Add this line into your service        
     volumes:
             #- /home/ubuntu/build/zipline-trader/notebooks:/projects    
       - ./notebooks:/projects    
@@ -60,7 +72,8 @@ services:
         #     source: .
         #     target: /zipline
         #     consistency: cached
-      - .:/zipline:cached  
+        #- .:/zipline:cached  
+        #      - .:/zipline
         #      - /zipline/zipline_trader.egg-info        
         #      - /zipline/zipline/assets/_assets.cpython-36m-x86_64-linux-gnu.so
         #      - /zipline/zipline/assets/continuous_futures.cpython-36m-x86_64-linux-gnu.so
