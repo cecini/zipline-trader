@@ -56,8 +56,10 @@ services:
     image: quantopian/ziplinedev:latest
     restart: always
     environment:
-      - PW_HASH="u'sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25'"
+            #- PW_HASH="u'sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25'"
+      - PW_HASH="sha1:dd9c3eec230c:867942c0e532050e3e3def134cd9c18245508e25"
       - TDX_DEBUG=1  
+      - QUANDL_API_KEY=vnEc9P-PyezMk_fkNE5k  
     ports:
       - 8888:8888      
     stdin_open: true   # Add this line into your service
