@@ -367,7 +367,10 @@ def register_tdx(assets=None, minute=False, start=None, fundamental=False, end=N
                      minutes_per_day=240)
 
 
-bundles.register('tdx', partial(tdx_bundle, None, False, False), minutes_per_day=240)
+# register_calendar('SHSZ', SHSZExchangeCalendar(), True)
+# when call register_calendar?
+bundles.register('tdx', partial(tdx_bundle, None, False, False), 'SHSZ', minutes_per_day=240)
+
 
 if __name__ == '__main__':
     eg = Engine(auto_retry=True, multithread=True, thread_num=8)
