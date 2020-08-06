@@ -95,6 +95,7 @@ def _run(handle_data,
          environ,
          blotter,
          benchmark_spec,
+         # below addtions
          broker,
          state_filename,
          realtime_bar_target,
@@ -218,11 +219,13 @@ def _run(handle_data,
         equity_minute_reader=bundle_data.equity_minute_bar_reader,
         equity_daily_reader=bundle_data.equity_daily_bar_reader,
         adjustment_reader=bundle_data.adjustment_reader,
+       #  fundamental_reader=bundle_data.fundamental_reader,
     )
 
     pipeline_loader = USEquityPricingLoader.without_fx(
         bundle_data.equity_daily_bar_reader,
         bundle_data.adjustment_reader,
+       #  fundamental_reader=bundle_data.fundamental_reader,
     )
 
     def choose_loader(column):
