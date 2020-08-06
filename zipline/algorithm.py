@@ -277,6 +277,7 @@ class TradingAlgorithm(object):
                  create_event_context=None,
                  performance_callback=None,
                  stop_execution_callback=None,
+                 fundamental_reader=None,
                  **initialize_kwargs):
         # List of trading controls to be used to validate orders.
         self.trading_controls = [LongOnly(on_error="log"), LimitPrice(on_error='log')]
@@ -379,7 +380,7 @@ class TradingAlgorithm(object):
         self.event_manager = EventManager(create_event_context)
 
         self._handle_data = None
-        self.fundamental_reader = kwargs.pop("fundamental_reader",None)
+        self.fundamental_reader = fundamental_reader
 
         def noop(*args, **kwargs):
             pass
