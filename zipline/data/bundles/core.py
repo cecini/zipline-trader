@@ -584,6 +584,22 @@ def _make_bundle_core():
                 minute_equity_path(name, timestr, environ=environ),
             )        
 
+        if name  is not 'tdx' :    
+            return BundleData(
+                asset_finder=AssetFinder(
+                    asset_db_path(name, timestr, environ=environ),
+                ),
+                equity_minute_bar_reader=minute_reader,
+                
+                equity_daily_bar_reader=BcolzDailyBarReader(
+                    daily_equity_path(name, timestr, environ=environ),
+                ),
+                adjustment_reader=SQLiteAdjustmentReader(
+                    adjustment_db_path(name, timestr, environ=environ),
+                ),
+                fundamental_reader=None,            
+            )
+
         return BundleData(
             asset_finder=AssetFinder(
                 asset_db_path(name, timestr, environ=environ),
