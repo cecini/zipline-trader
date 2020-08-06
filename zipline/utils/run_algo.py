@@ -35,7 +35,13 @@ from zipline.pipeline.loaders import USEquityPricingLoader
 import zipline.utils.paths as pth
 from zipline.extensions import load
 from zipline.errors import SymbolNotFound
-from zipline.data.cn_loader import load_market_data
+# TradingEnvironment have deleet e, how use the load_market_data ,how?
+# wiil use the benckmarkspec, should ref the loader.py or test
+# from zipline.data.cn_loader import load_market_data
+# ENH: Rework benchmark handling for zipline CLI
+# prev: tradenv with load_market-data (benchmark data and treasury data)
+# now only benchspec(only benckmark no treasury,and remove tradenv)
+
 from zipline.algorithm import TradingAlgorithm, NoBenchmark
 from zipline.algorithm_live import LiveTradingAlgorithm
 from zipline.finance.blotter import Blotter
