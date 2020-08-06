@@ -16,6 +16,7 @@ from zipline.data.data_portal_live import DataPortalLive
 
 from zipline.data.cn_loader import load_market_data
 from zipline.algorithm_live import LiveTradingAlgorithm
+# have removed ,but now how?
 from zipline.algorithm import TradingAlgorithm
 
 import os
