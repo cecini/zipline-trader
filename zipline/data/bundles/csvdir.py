@@ -154,6 +154,10 @@ def csvdir_bundle(environ,
         writer.write(_pricing_iter(ddir, symbols, metadata,
                      divs_splits, show_progress),
                      show_progress=show_progress)
+        # Allow non US csvdir assets to be ingested 
+        # bloew calendar_alias
+
+
 
         # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
         # register "CSVDIR" to resolve to the NYSE calendar, because these
