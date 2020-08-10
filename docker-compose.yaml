@@ -104,3 +104,12 @@ services:
         
 
 
+        
+  base-notebook:
+    build:
+            # context: https://github.com/cecini/docker-stacks.git#master:base-notebook
+      context: ../docker-stacks/base-notebook/
+      args:
+         - PYTHON_VERSION=3.6.11    
+    image: jupyter/base-notebook
+    restart: always
