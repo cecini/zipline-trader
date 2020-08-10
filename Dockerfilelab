@@ -28,14 +28,23 @@ RUN conda config --system --set channel_priority flexible
 RUN conda install setuptools==45 pip-tools --yes && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
-COPY etc ./etc
+#COPY etc ./etc
+#USER root
 #RUN chown -R jovyan:100 etc/requirements_locked.txt
-RUN  pip-compile --no-emit-index-url --output-file=requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in -P numpy==1.14.1 -P scipy==1.0.0 -P pandas==0.22.0 -P pandas_datareader==0.4.0 -P dask==0.17.1 -P statsmodels==0.9.0  
-COPY . .
-RUN cp requirements_locked.txt ./etc/
+COPY --chown=jovyan:100 . .
+#RUN  pip-compile --no-emit-index-url --output-file=requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in -P numpy==1.14.1 -P scipy==1.0.0 -P pandas==0.22.0 -P pandas_datareader==0.4.0 -P dask==0.17.1 -P statsmodels==0.9.0 -P certifi==2018.8.24 
+RUN  pip-compile --no-emit-index-url --output-file=etc/requirements_locked.txt etc/requirements.in etc/requirements_blaze.in etc/requirements_build.in etc/requirements_dev.in etc/requirements_docs.in etc/requirements_talib.in  etc/requirements_tdx.in -P numpy==1.14.1 -P scipy==1.0.0 -P pandas==0.22.0 -P pandas_datareader==0.4.0 -P dask==0.17.1 -P statsmodels==0.9.0 -P certifi==2018.8.24 -P matplotlib==3.2.2 
+#USER jovyan
+#COPY. .
+
+#USER root
+#RUN cp requirements_locked.txt ./etc/
+# overwrite same as the aboved pip-compile
 CMD [./ci/travis/overwrite_requirements.sh] 
 #  - cat etc/requirements_locked.txt
 RUN cat etc/requirements_locked.txt
+
+#USER jovyan
 
 #install:
 #  - conda info -a
@@ -70,7 +79,7 @@ RUN conda install conda-build anaconda-client --yes -q && \
   # See https://github.com/travis-ci/travis-ci/issues/4704#issuecomment-348435959 for details.
 
 CMD [loopcondaa.sh]
-RUN  python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+#RUN  python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
   # We conda install certifi at the pinned exact version because it is a transitive dependency of zipline via requests and uses distutils for packaging.
   # Since conda installs latest certifi by default, we would fail to uninstall that new version when trying to install the pinned version using pip later in the build:
   # "Cannot uninstall 'certifi'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall."
@@ -93,13 +102,13 @@ RUN etc/dev-install --cache-dir="$HOME/.cache/.pip/pip_np$CONDA_NPY"
 ## e.g., RUN conda install -f -y -q -c conda-forge dask=2.6.0
 #
 ##COPY zipline-notebook.ipynb .
+RUN conda clean --all -y
 
 USER root
 
 # Add permanent apt-get installs and other root commands here
 # e.g., RUN apt-get install npm nodejs
 
-RUN conda clean --all -y
 
 
 
